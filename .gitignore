@@ -1,0 +1,9 @@
+node_modules/
+public/uploads/*
+!public/uploads/.gitkeep
+public/music/*
+!public/music/.gitkeep
+data/*.xlsx
+.DS_Store
+Thumbs.db
+*.log

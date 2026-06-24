@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>想对你说 — 留言板</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Viaoda+Libre&family=Imprima&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; background: #0a0608; scroll-behavior: auto; }
+    html { scrollbar-gutter: stable; }
+    body { font-family: 'Imprima', sans-serif; color: #fff; }
+    * { box-sizing: border-box; }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 48px;
+      background: linear-gradient(to bottom, rgba(10,6,8,0.95) 40%, rgba(10,6,8,0) 100%);
+    }
+    .nav-group { display: flex; align-items: center; gap: 30px; }
+    .nav-link {
+      text-transform: uppercase; font-size: 12px; letter-spacing: 0.12em;
+      color: #fff; opacity: 0.8; text-decoration: none;
+      transition: opacity 0.3s;
+    }
+    .nav-link:hover, .nav-link.active { opacity: 1; }
+    .nav-logo { width: 28px; height: 28px; display: grid; place-items: center; text-decoration: none; }
+    .nav-mobile { display: none; }
+
+    /* ── Hero ── */
+    .page-hero {
+      padding: 130px 40px 20px; max-width: 700px; margin: 0 auto; text-align: center;
+    }
+    .hero-eyebrow {
+      text-transform: uppercase; font-size: 11px; letter-spacing: 0.22em;
+      color: rgba(255,255,255,0.4); margin-bottom: 12px;
+    }
+    .hero-heading {
+      font-family: 'Viaoda Libre', serif; font-size: clamp(34px, 5vw, 56px);
+      line-height: 1.1; letter-spacing: 0.02em; margin: 0 0 8px; color: #fff;
+    }
+    .hero-lead {
+      font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.55);
+    }
+
+    /* ── Message list ── */
+    .msg-list {
+      max-width: 660px; margin: 0 auto; padding: 20px 40px 120px;
+    }
+    .msg-entry {
+      position: relative; padding: 28px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      animation: fadeInMsg 0.5s ease;
+    }
+    @keyframes fadeInMsg {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .msg-entry:first-child { border-top: 1px solid rgba(255,255,255,0.06); }
+    .msg-meta {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+    }
+    .msg-sender {
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 100px;
+    }
+    .msg-sender.me { background: rgba(255,179,179,0.15); color: #ffb3b3; }
+    .msg-sender.ta { background: rgba(179,200,255,0.15); color: #b3c8ff; }
+    .msg-time {
+      font-size: 11px; color: rgba(255,255,255,0.3); letter-spacing: 0.08em;
+    }
+    .msg-content {
+      font-size: 15px; line-height: 1.65; color: rgba(255,255,255,0.78);
+      max-width: 520px; margin: 0;
+    }
+    .msg-delete {
+      position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+      width: 30px; height: 30px; border-radius: 50%;
+      background: transparent; border: none; color: rgba(255,255,255,0.2);
+      cursor: pointer; font-size: 14px; transition: all 0.3s;
+    }
+    .msg-delete:hover { color: rgba(255,100,100,0.7); }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center; padding: 60px 20px;
+    }
+    .empty-icon { font-size: 44px; margin-bottom: 14px; opacity: 0.5; }
+    .empty-text { color: rgba(255,255,255,0.35); font-size: 14px; }
+
+    /* ── Fixed bottom input ── */
+    .msg-composer {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10,6,8,0.92); backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 16px 40px;
+    }
+    .composer-inner {
+      max-width: 660px; margin: 0 auto;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .composer-who {
+      display: flex; gap: 6px;
+    }
+    .who-btn {
+      width: 38px; height: 38px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04);
+      cursor: pointer; font-size: 16px; display: grid; place-items: center;
+      transition: all 0.3s;
+    }
+    .who-btn.selected { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.12); }
+    .composer-input {
+      flex: 1; padding: 12px 18px; border-radius: 100px;
+      border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06);
+      color: #fff; font-family: 'Imprima', sans-serif; font-size: 14px; outline: none;
+    }
+    .composer-input::placeholder { color: rgba(255,255,255,0.25); }
+    .btn-send {
+      padding: 10px 22px; border-radius: 100px;
+      border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.08);
+      color: #fff; cursor: pointer; font-family: 'Imprima', sans-serif;
+      font-size: 13px; letter-spacing: 0.06em; transition: all 0.3s; white-space: nowrap;
+    }
+    .btn-send:hover { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.45); }
+    .btn-secondary {
+      padding: 10px 20px; border-radius: 100px;
+      border: 1px solid rgba(255,255,255,0.15); background: transparent;
+      color: rgba(255,255,255,0.7); cursor: pointer; font-family: 'Imprima', sans-serif;
+      font-size: 12px; letter-spacing: 0.06em; transition: all 0.3s; white-space: nowrap; margin-left: 6px;
+    }
+    .btn-secondary:hover { border-color: rgba(255,255,255,0.4); color: #fff; }
+
+    /* ── Footer ── */
+    .page-footer {
+      text-align: center; padding: 20px; margin-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.04); max-width: 700px; margin: 0 auto;
+    }
+    .footer-back {
+      display: inline-flex; align-items: center; gap: 10px;
+      color: rgba(255,255,255,0.5); text-decoration: none;
+      font-size: 12px; letter-spacing: 0.1em; transition: color 0.3s;
+    }
+    .footer-back:hover { color: #fff; }
+    .footer-back svg { width: 16px; height: 16px; }
+
+    /* Focus visibility — WCAG 2.4.7 */
+    a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 2px solid rgba(255,255,255,0.6); outline-offset: 3px; border-radius: 4px;
+    }
+    .who-btn:focus-visible { outline-offset: 0px; }
+    .msg-delete:focus-visible { outline-offset: 1px; }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (max-width: 767px) {
+      nav { padding: 18px 20px; }
+      .nav-group { display: none; }
+      .nav-mobile { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+      .page-hero { padding: 100px 20px 10px; }
+      .msg-list { padding: 10px 16px 140px; }
+      .msg-composer { padding: 14px 16px; }
+      .composer-inner { gap: 8px; }
+      .composer-input { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-group">
+      <a class="nav-link" href="index.html">首页</a>
+      <a class="nav-link" href="worlds.html">照片墙</a>
+      <a class="nav-link" href="atelier.html">日常</a>
+      <a class="nav-link active" href="codex.html">留言</a>
+      <a href="index.html" class="nav-logo" aria-label="返回首页" style="margin-left:20px;">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2l2.09 6.42H23l-5.45 3.96L19.64 19 14 15.04 8.36 19l2.09-6.62L5 8.42h6.91L14 2z" fill="#fff"/>
+        </svg>
+      </a>
+    </div>
+    <div class="nav-mobile">
+      <a class="nav-link" href="index.html">首页</a>
+      <a href="index.html" class="nav-logo">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2l2.09 6.42H23l-5.45 3.96L19.64 19 14 15.04 8.36 19l2.09-6.62L5 8.42h6.91L14 2z" fill="#fff"/>
+        </svg>
+      </a>
+      <a class="nav-link" href="atelier.html">日常</a>
+    </div>
+  </nav>
+
+  <section class="page-hero">
+    <p class="hero-eyebrow">Messages · 💬</p>
+    <h1 class="hero-heading">想对你说</h1>
+    <p class="hero-lead">把那些藏在心里的、不好意思当面说的话，都留在这里吧。每一句都是我们的秘密。</p>
+  </section>
+
+  <div class="msg-list" id="msg-list">
+    <!-- JS filled -->
+  </div>
+
+  <!-- Fixed composer -->
+  <div class="msg-composer">
+    <div class="composer-inner">
+      <div class="composer-who">
+        <button class="who-btn selected" id="who-me" onclick="setSender('me')" title="我" aria-label="以我的身份发送">❤️</button>
+        <button class="who-btn" id="who-ta" onclick="setSender('ta')" title="TA" aria-label="以 TA 的身份发送">💙</button>
+      </div>
+      <input class="composer-input" id="msg-input" type="text" placeholder="写下想说的话..." maxlength="280" aria-label="留言内容" onkeydown="if(event.key==='Enter')sendMessage()" />
+      <button class="btn-send" onclick="sendMessage()">发送</button>
+    </div>
+  </div>
+
+  <script>
+    // ── localStorage helpers ──
+    function lsGet(key, def) { try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } }
+    function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} }
+
+    var MESSAGES_KEY = 'couple_messages';
+    var defaultMessages = [
+      { sender: 'me', content: '今天是我们在一起的第100天！好开心能遇到你 💕', time: '2024-04-10T21:30:00' },
+      { sender: 'ta', content: '看到这个留言板了吗？以后我们可以在这里说悄悄话～', time: '2024-04-10T22:15:00' },
+      { sender: 'me', content: '谢谢你这段时间的陪伴，我每天都觉得很幸福。', time: '2024-05-20T08:00:00' },
+      { sender: 'ta', content: '傻瓜，我也是。今天520，我们要一直在一起哦 🥰', time: '2024-05-20T09:22:00' },
+      { sender: 'me', content: '刚翻到我们第一次约会时拍的照片，好怀念那天。', time: '2024-07-03T19:45:00' }
+    ];
+    var messages = lsGet(MESSAGES_KEY, defaultMessages);
+    lsSet(MESSAGES_KEY, messages);
+
+    var currentSender = 'me';
+
+    function formatTime(isoStr) {
+      var d = new Date(isoStr);
+      var now = new Date();
+      var diffMs = now - d;
+      var diffMin = Math.floor(diffMs / 60000);
+      var diffHr = Math.floor(diffMs / 3600000);
+      var diffDay = Math.floor(diffMs / 86400000);
+
+      if (diffMin < 1) return '刚刚';
+      if (diffMin < 60) return diffMin + ' 分钟前';
+      if (diffHr < 24) return diffHr + ' 小时前';
+      if (diffDay < 7) return diffDay + ' 天前';
+      var month = d.getMonth() + 1;
+      var day = d.getDate();
+      var hour = d.getHours();
+      var min = d.getMinutes();
+      return month + '月' + day + '日 ' + (hour < 10 ? '0' : '') + hour + ':' + (min < 10 ? '0' : '') + min;
+    }
+
+    function renderMessages() {
+      var list = document.getElementById('msg-list');
+      if (messages.length === 0) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">💌</div><p class="empty-text">还没有留言，在下方发送第一条吧 💕</p></div>';
+        return;
+      }
+      var sorted = messages.slice().sort(function(a, b) { return b.time.localeCompare(a.time); });
+      var html = '';
+      for (var i = 0; i < sorted.length; i++) {
+        var m = sorted[i];
+        var senderLabel = m.sender === 'me' ? '❤️ 我' : '💙 TA';
+        var senderClass = m.sender === 'me' ? 'me' : 'ta';
+        html += '<div class="msg-entry">';
+        html += '<div class="msg-meta">';
+        html += '<span class="msg-sender ' + senderClass + '">' + senderLabel + '</span>';
+        html += '<span class="msg-time">' + formatTime(m.time) + '</span>';
+        html += '</div>';
+        html += '<p class="msg-content">' + m.content.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p>';
+        html += '<button class="msg-delete" onclick="deleteMessage(' + i + ')" title="删除">✕</button>';
+        html += '</div>';
+      }
+      list.innerHTML = html;
+    }
+
+    function sendMessage() {
+      var input = document.getElementById('msg-input');
+      var content = input.value.trim();
+      if (!content) return;
+      messages.push({
+        sender: currentSender,
+        content: content,
+        time: new Date().toISOString()
+      });
+      lsSet(MESSAGES_KEY, messages);
+      input.value = '';
+      renderMessages();
+      // Scroll to top of list
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function deleteMessage(index) {
+      if (!confirm('确定删除这条留言吗？')) return;
+      // Delete by time since we sorted them
+      var sorted = messages.slice().sort(function(a, b) { return b.time.localeCompare(a.time); });
+      var target = sorted[index];
+      for (var i = 0; i < messages.length; i++) {
+        if (messages[i].time === target.time && messages[i].content === target.content) {
+          messages.splice(i, 1);
+          break;
+        }
+      }
+      lsSet(MESSAGES_KEY, messages);
+      renderMessages();
+    }
+
+    function setSender(who) {
+      currentSender = who;
+      document.getElementById('who-me').classList.toggle('selected', who === 'me');
+      document.getElementById('who-ta').classList.toggle('selected', who === 'ta');
+    }
+
+    renderMessages();
+  </script>
+</body>
+</html>

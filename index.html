@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>我们的时光 — 情侣专属空间</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Viaoda+Libre&amp;family=Imprima&amp;display=swap" rel="stylesheet">
+  <style>
+    :root { scrollbar-gutter: stable; }
+    html, body { margin: 0; padding: 0; background: #0a0608; scroll-behavior: auto; }
+    body { font-family: 'Imprima', sans-serif; color: #fff; }
+    * { box-sizing: border-box; }
+
+    @keyframes bobUp {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    @keyframes heartBeat {
+      0%, 100% { transform: scale(1); }
+      15% { transform: scale(1.15); }
+      30% { transform: scale(1); }
+    }
+
+    @keyframes countPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    /* ── Scroll spacer + sticky stage ── */
+    #scroll-root { height: 480vh; position: relative; }
+    #stage {
+      position: sticky; top: 0; left: 0; width: 100%; height: 100vh;
+      overflow: hidden; background: #0a0608;
+    }
+
+    /* ── Parallax layers ── */
+    .layer {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      will-change: transform, opacity; pointer-events: none;
+    }
+    #world {
+      background-size: cover; background-position: center;
+      transform-origin: 50% 50%;
+    }
+    #portal {
+      background-size: cover; background-position: center;
+      transform-origin: 52% 38%; z-index: 5;
+    }
+    .curtain {
+      top: 0; height: 100%; width: 62%;
+      background-size: cover; background-position: center; z-index: 8;
+    }
+    #curtain-left { left: 0; transform-origin: left center; }
+    #curtain-right { right: 0; transform-origin: right center; }
+
+    /* ── Nav ── */
+    nav {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 48px; pointer-events: auto;
+    }
+    .nav-group { display: flex; align-items: center; gap: 30px; }
+    .nav-link {
+      text-transform: uppercase; font-size: 12px; letter-spacing: 0.12em;
+      color: #fff; opacity: 0.9; text-decoration: none;
+      transition: opacity 0.3s;
+    }
+    .nav-link:hover { opacity: 1; }
+    .nav-logo { width: 28px; height: 28px; display: grid; place-items: center; text-decoration: none; }
+    .nav-logo svg path { fill: #fff; }
+    .nav-mobile { display: none; }
+
+    /* ── Scene 1 hero ── */
+    #scene1 {
+      position: absolute; inset: 0; z-index: 46; pointer-events: none;
+    }
+    .hero-left {
+      position: absolute; top: 42%; left: 60px; transform: translateY(-50%);
+      max-width: 520px;
+    }
+    .hero-heart {
+      display: inline-block; font-size: 36px; margin-bottom: 8px;
+      animation: heartBeat 2s ease-in-out infinite;
+    }
+    .hero-days-wrap {
+      display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    }
+    .hero-days-num {
+      font-family: 'Viaoda Libre', serif; color: #fff;
+      font-size: clamp(72px, 9vw, 130px); line-height: 0.95; letter-spacing: 0.01em;
+      text-shadow: 0 2px 30px rgba(0,0,0,0.5);
+    }
+    .hero-days-label {
+      font-size: 18px; color: rgba(255,255,255,0.7); letter-spacing: 0.08em;
+    }
+    .hero-title {
+      font-family: 'Viaoda Libre', serif; color: #fff;
+      font-size: clamp(28px, 4vw, 46px); line-height: 1.15; letter-spacing: 0.02em;
+      margin: 8px 0 18px; text-shadow: 0 2px 24px rgba(0,0,0,0.45);
+    }
+    .hero-sub {
+      font-size: 16px; line-height: 1.7; color: rgba(255,255,255,0.78); max-width: 420px;
+    }
+    .hero-milestone {
+      margin-top: 20px; padding: 12px 20px; border-radius: 100px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      display: inline-block; font-size: 14px; color: rgba(255,255,255,0.75);
+      letter-spacing: 0.04em;
+    }
+    .hero-milestone strong { color: #ffb3b3; font-weight: normal; }
+    .hero-right {
+      position: absolute; top: 50%; right: 40px; transform: translateY(-50%);
+      display: flex; gap: 18px;
+    }
+    .hero-card {
+      width: 158px; height: 158px; border-radius: 28px; overflow: hidden;
+      position: relative; background-size: cover; background-position: center;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.45); cursor: pointer;
+      transition: transform 0.4s cubic-bezier(0.22,1,0.36,1);
+      pointer-events: auto;
+      opacity: 0; transform: translateY(20px);
+    }
+    .hero-card.card-enter {
+      opacity: 1; transform: translateY(0);
+      transition: opacity 0.5s cubic-bezier(0.2,0,0,1), transform 0.5s cubic-bezier(0.2,0,0,1);
+    }
+    .hero-card:hover { transform: translateY(-6px); }
+    .card-label {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 16px; backdrop-filter: blur(6px);
+      background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 60%, transparent 100%);
+      font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .play-icon {
+      width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.92);
+      display: grid; place-items: center; color: #2a1808; flex: none; font-size: 16px;
+    }
+    .photo-date-label {
+      position: absolute; inset: 0; display: flex; align-items: flex-end; padding: 16px;
+      font-family: 'Viaoda Libre', serif; font-size: 18px; line-height: 1.2;
+      background: linear-gradient(to top, rgba(0,0,0,0.6), transparent 70%);
+    }
+
+    /* slider dots */
+    .dots {
+      position: absolute; bottom: 36px; left: 60px; display: flex; gap: 8px; z-index: 47;
+    }
+    .dots i { height: 4px; border-radius: 4px; background: #fff; display: block; }
+    .dots i.wide { width: 28px; opacity: 1; }
+    .dots i.thin { width: 14px; opacity: 0.45; }
+
+    /* scroll cue */
+    .scroll-cue {
+      position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 47;
+    }
+    .scroll-cue span {
+      text-transform: uppercase; font-size: 10px; letter-spacing: 0.22em; color: rgba(255,255,255,0.6);
+    }
+    .scroll-cue .chev {
+      width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.4);
+      display: grid; place-items: center; animation: bobUp 1.8s ease-in-out infinite;
+    }
+
+    /* ── Scene 2 love story ── */
+    #scene2 {
+      position: absolute; inset: 0; z-index: 46;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; padding: 0 40px;
+    }
+    .love-wrap { text-align: center; max-width: 600px; }
+    .love-icon { font-size: 48px; margin-bottom: 20px; }
+    .love-title {
+      font-family: 'Viaoda Libre', serif; color: #fff;
+      font-size: clamp(34px, 5vw, 64px); letter-spacing: 0.03em; line-height: 1.1;
+      margin: 0 0 24px; text-shadow: 0 2px 20px rgba(0,0,0,0.4);
+    }
+    .love-text {
+      font-family: 'Imprima', sans-serif; font-size: 19px; line-height: 1.7;
+      color: rgba(255,255,255,0.8); max-width: 480px; margin: 0 auto 10px;
+    }
+    .love-attribution {
+      font-size: 14px; color: rgba(255,255,255,0.45); letter-spacing: 0.08em; margin-top: 20px;
+    }
+
+    /* entrance fade target */
+    .fade-ui { opacity: 0; transition: opacity 0.9s ease, transform 0.9s ease; }
+    .fade-ui.in { opacity: 1; }
+    .hero-left.fade-ui { transform: translateY(calc(-50% + 20px)); }
+    .hero-left.fade-ui.in { transform: translateY(-50%); }
+
+    /* Focus visibility — WCAG 2.4.7 */
+    a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 2px solid rgba(255,255,255,0.6); outline-offset: 3px; border-radius: 4px;
+    }
+    .hero-card:focus-visible { outline-offset: -4px; border-radius: 28px; }
+
+    /* Reduced motion — vestibular safety */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      .layer, .curtain { will-change: auto; }
+      #scroll-root { height: auto; }
+      #stage { position: relative; height: auto; }
+      #world, #portal, #curtain-left, #curtain-right { transform: none !important; }
+      #scene1, #scene2 { opacity: 1 !important; position: relative; padding: 80px 40px; }
+      #scene2 { margin-top: 40px; padding-bottom: 100px; }
+      .hero-left { position: relative; top: auto; left: auto; transform: none; max-width: 100%; }
+      .hero-right { position: relative; top: auto; right: auto; transform: none; justify-content: center; }
+      .dots, .scroll-cue { display: none; }
+    }
+
+    @media (max-width: 767px) {
+      nav { padding: 18px 20px; }
+      .nav-group { display: none; }
+      .nav-mobile { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+      .hero-left { left: 50%; right: auto; transform: translate(-50%, -50%); top: 38%;
+        text-align: center; max-width: 300px; }
+      .hero-left.fade-ui { transform: translate(-50%, calc(-50% + 20px)); }
+      .hero-left.fade-ui.in { transform: translate(-50%, -50%); }
+      .hero-days-num { font-size: 72px; }
+      .hero-title { color: #3b1a0a; font-size: 24px; }
+      .hero-sub { color: #3b1a0a; max-width: 280px; margin: 0 auto; font-size: 14px; }
+      .hero-right { position: absolute; top: 64%; right: auto; left: 50%; transform: translateX(-50%); }
+      .hero-right .hero-card:nth-child(2),
+      .hero-right .hero-card:nth-child(3) { display: none; }
+      .hero-milestone { font-size: 12px; padding: 10px 16px; }
+      .dots { left: 50%; transform: translateX(-50%); }
+      .scroll-cue { display: none; }
+      .love-title { font-size: 34px; }
+      .love-text { font-size: 14px; max-width: 260px; }
+      .hero-days-wrap { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <div id="scroll-root">
+    <div id="stage">
+      <!-- Parallax layers -->
+      <div id="world" class="layer"></div>
+      <div id="portal" class="layer"></div>
+      <div id="curtain-left" class="curtain layer"></div>
+      <div id="curtain-right" class="curtain layer"></div>
+
+      <!-- Navigation -->
+      <nav>
+        <div class="nav-group">
+          <a class="nav-link" href="index.html">首页</a>
+          <a class="nav-link" href="worlds.html">照片墙</a>
+          <a class="nav-link" href="atelier.html">日常</a>
+          <a class="nav-link" href="codex.html">留言</a>
+          
+        </div>
+        <div class="nav-mobile">
+          <a class="nav-link" href="worlds.html">照片</a>
+          <a href="index.html" class="nav-logo">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 2l2.09 6.42H23l-5.45 3.96L19.64 19 14 15.04 8.36 19l2.09-6.62L5 8.42h6.91L14 2z" fill="#fff"></path>
+            </svg>
+          </a>
+          <a class="nav-link" href="codex.html">留言</a>
+        </div>
+      </nav>
+
+      <!-- Scene 1: Hero — anniversary countdown -->
+      <div id="scene1">
+        <div class="hero-left fade-ui">
+          <div class="hero-heart">💕</div>
+          <div class="hero-days-wrap">
+            <span class="hero-days-num" id="days-num">—</span>
+            <span class="hero-days-label">天</span>
+          </div>
+          <h1 class="hero-title">与你在一起的<br>每一天都是奇迹</h1>
+          <p class="hero-sub">从相遇的那一刻起，时间就有了不一样的意义。每一个日出、每一次相视而笑，都是我们故事里最珍贵的篇章。</p>
+          <div class="hero-milestone" id="milestone">距离 <strong>—</strong> 还有 <span>—</span> 天</div>
+        </div>
+        <div class="hero-right fade-ui" id="hero-photos">
+          <!-- Filled by JS: latest 3 photos -->
+        </div>
+
+        <div class="dots fade-ui">
+          <i class="wide"></i><i class="thin"></i><i class="thin"></i><i class="thin"></i>
+        </div>
+
+        <div class="scroll-cue fade-ui">
+          <span>向下探索</span>
+          <div class="chev">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scene 2: Love story -->
+      <div id="scene2">
+        <div class="love-wrap">
+          <div class="love-icon">✨</div>
+          <h2 class="love-title">爱是唯一可以<br>超越时间的东西</h2>
+          <p class="love-text">从陌生到熟悉，从相遇到相知，从牵手到承诺——我们走过的每一步都在彼此的生命中刻下了不可磨灭的印记。未来的路还很长，而我只想和你一起走下去。</p>
+          <p class="love-attribution">— 写给我最爱的你</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Asset map (large stable CDN stills — kept remote) ──
+    var PORTAL_BG = 'https://plugin-assets.open-design.ai/plugins/mythic-naturecore/portal_bg_mu60k9-78f20d.webp';
+    var CURTAIN_LEFT = 'https://plugin-assets.open-design.ai/plugins/mythic-naturecore/curtain_left_cdht6q-c85f2f.webp';
+    var CURTAIN_RIGHT = 'https://plugin-assets.open-design.ai/plugins/mythic-naturecore/curtain_right_a9bn3i-1ca8f6.webp';
+    var WORLD_BG = 'https://plugin-assets.open-design.ai/plugins/mythic-naturecore/world_bg_jzzcn1-dfd909.webp';
+
+    // ── Math helpers ──
+    function easeInOut(t) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+
+    // ── Parallax magnitudes ──
+    var MAG = { world: 6, portal: 7, curtainL: 14, curtainR: 14 };
+
+    // ── localStorage helpers ──
+    function lsGet(key, def) { try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; } }
+    function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {} }
+
+    // ── Anniversary / countdown ──
+    var ANNIVERSARY_KEY = 'couple_anniversary';
+    var anniversary = lsGet(ANNIVERSARY_KEY, '2024-01-01');
+    lsSet(ANNIVERSARY_KEY, anniversary);
+
+    function daysBetween(d1, d2) {
+      return Math.floor((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+    }
+
+    function updateCountdown() {
+      var start = new Date(anniversary + 'T00:00:00');
+      var today = new Date(); today.setHours(0,0,0,0);
+      var days = daysBetween(start, today);
+      // Animate count-up on first render
+      var el = document.getElementById('days-num');
+      var target = parseInt(el.textContent, 10);
+      if (isNaN(target) || target === 0) target = days;
+      if (el.dataset.animating !== 'true') {
+        el.dataset.animating = 'true';
+        animateCount(el, target, days);
+      } else {
+        el.textContent = days;
+      }
+
+      var milestones = [100, 200, 300, 365, 500, 666, 730, 888, 999, 1000, 1314, 2000, 3000, 3650];
+      var next = null;
+      for (var i = 0; i < milestones.length; i++) {
+        if (milestones[i] > days) { next = milestones[i]; break; }
+      }
+      var msEl = document.getElementById('milestone');
+      if (next) {
+        var remaining = next - days;
+        msEl.innerHTML = '距离 <strong>' + next + ' 天纪念日</strong> 还有 <span>' + remaining + '</span> 天';
+      } else {
+        msEl.innerHTML = '🎉 <strong>已走过 ' + days + ' 天</strong>，每一天都是里程碑';
+      }
+    }
+
+    function animateCount(el, from, to) {
+      var start = performance.now();
+      var duration = 1400;
+      function step(now) {
+        var t = Math.min((now - start) / duration, 1);
+        var eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+        el.textContent = Math.floor(from + (to - from) * eased);
+        if (t < 1) {
+          el.style.animation = 'countPulse 0.6s cubic-bezier(0.2,0,0,1)';
+          requestAnimationFrame(step);
+        } else {
+          el.textContent = to;
+          el.style.animation = '';
+        }
+      }
+      requestAnimationFrame(step);
+    }
+    updateCountdown();
+    setInterval(updateCountdown, 60000);
+
+    // ── Load photos for hero cards ──
+    var PHOTOS_KEY = 'couple_photos';
+    var defaultPhotos = [
+      { url: 'https://picsum.photos/seed/love1/400/400', date: '2024-02-14', desc: '第一个情人节' },
+      { url: 'https://picsum.photos/seed/love2/400/400', date: '2024-05-20', desc: '初夏的海边' },
+      { url: 'https://picsum.photos/seed/love3/400/400', date: '2024-08-07', desc: '生日那天' },
+      { url: 'https://picsum.photos/seed/love4/400/400', date: '2024-10-01', desc: '秋天的旅行' },
+      { url: 'https://picsum.photos/seed/love5/400/400', date: '2025-01-01', desc: '跨年之夜' }
+    ];
+    var photos = lsGet(PHOTOS_KEY, defaultPhotos);
+    lsSet(PHOTOS_KEY, photos);
+
+    function renderHeroPhotos() {
+      var container = document.getElementById('hero-photos');
+      var latest = photos.slice(-3).reverse();
+      var labels = ['最新', '回忆', '时光'];
+      var html = '';
+      for (var i = 0; i < 3; i++) {
+        var p = latest[i] || latest[0];
+        var lb = labels[i];
+        html += '<div class="hero-card" style="background-image:url(\'' + p.url + '\')" data-card-idx="' + i + '" onclick="location.href=\'worlds.html\'" tabindex="0" role="link" aria-label="查看照片：' + (p.desc || p.date) + '" onkeydown="if(event.key===\'Enter\')location.href=\'worlds.html\'">';
+        html += '<div class="card-label"><span class="play-icon">📷</span>' + lb + '：' + (p.desc || p.date) + '</div>';
+        html += '</div>';
+      }
+      container.innerHTML = html;
+      // Stagger entrance — each card enters 120ms after the previous
+      setTimeout(function () {
+        var cards = container.querySelectorAll('.hero-card');
+        var baseDelay = 800; // after curtain open
+        for (var j = 0; j < cards.length; j++) {
+          (function (card, d) {
+            setTimeout(function () { card.classList.add('card-enter'); }, d);
+          })(cards[j], baseDelay + j * 120);
+        }
+      }, 0);
+    }
+    renderHeroPhotos();
+
+    // ── Wire backgrounds ──
+    var worldEl = document.getElementById('world');
+    var portalEl = document.getElementById('portal');
+    var curtLEl = document.getElementById('curtain-left');
+    var curtREl = document.getElementById('curtain-right');
+    worldEl.style.backgroundImage = "url('" + WORLD_BG + "')";
+    portalEl.style.backgroundImage = "url('" + PORTAL_BG + "')";
+    curtLEl.style.backgroundImage = "url('" + CURTAIN_LEFT + "')";
+    curtREl.style.backgroundImage = "url('" + CURTAIN_RIGHT + "')";
+
+    var scene1 = document.getElementById('scene1');
+    var scene2 = document.getElementById('scene2');
+
+    // ── Responsive flag ──
+    var isMobile = false;
+    var mq = window.matchMedia('(max-width: 767px)');
+    function onMq(e) { isMobile = e.matches; }
+    onMq(mq);
+    if (mq.addEventListener) mq.addEventListener('change', onMq); else mq.addListener(onMq);
+
+    // ── Scroll progress (passive listener) ──
+    var scrollProgress = 0;
+    function readScroll() {
+      var root = document.getElementById('scroll-root');
+      var scrollable = root.offsetHeight - window.innerHeight;
+      scrollProgress = scrollable > 0 ? clamp(window.scrollY / scrollable, 0, 1) : 0;
+    }
+    window.addEventListener('scroll', readScroll, { passive: true });
+    window.addEventListener('resize', readScroll);
+    readScroll();
+
+    // ── Smooth mouse tracking ──
+    var targetRX = 0, targetRY = 0, curRX = 0, curRY = 0;
+    window.addEventListener('mousemove', function (e) {
+      targetRX = (e.clientX / window.innerWidth) * 2 - 1;
+      targetRY = (e.clientY / window.innerHeight) * 2 - 1;
+    });
+
+    // ── Render loop ──
+    function tick() {
+      curRX = lerp(curRX, targetRX, 0.07);
+      curRY = lerp(curRY, targetRY, 0.07);
+      var rx = curRX, ry = curRY;
+      var p = scrollProgress;
+      var eased = easeInOut(p);
+
+      var worldScale = lerp(1, 1.18, p);
+      worldEl.style.transform = 'scale(' + worldScale + ') translate3d(' + (rx * MAG.world) + 'px,' + (ry * MAG.world) + 'px,0)';
+
+      var portalScale = lerp(1, 7.5, p);
+      var portalOpacity = clamp(1 - (p - 0.65) / 0.2, 0, 1);
+      portalEl.style.opacity = portalOpacity;
+      portalEl.style.transform = 'scale(' + portalScale + ') translate3d(' + (rx * MAG.portal) + 'px,' + (ry * MAG.portal) + 'px,0)';
+
+      var curtainScrollScale = lerp(1, 1.3, p);
+      var totalShift = 62 + eased * 88;
+      curtLEl.style.transform = 'translateX(calc(-' + totalShift + '% + ' + (rx * MAG.curtainL) + 'px)) translateY(' + (ry * MAG.curtainL * 0.3) + 'px) scale(' + curtainScrollScale + ') translateZ(0)';
+      curtREl.style.transform = 'translateX(calc(' + totalShift + '% + ' + (rx * MAG.curtainR) + 'px)) translateY(' + (ry * MAG.curtainR * 0.3) + 'px) scale(' + curtainScrollScale + ') translateZ(0)';
+
+      var s1 = clamp(1 - p / 0.22, 0, 1);
+      scene1.style.opacity = s1;
+      scene1.style.pointerEvents = s1 > 0.05 ? 'auto' : 'none';
+
+      var s2 = clamp((p - 0.68) / 0.16, 0, 1);
+      scene2.style.opacity = s2;
+      scene2.style.pointerEvents = s2 > 0.05 ? 'auto' : 'none';
+
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+
+    // ── Entrance animation ──
+    curtLEl.style.transition = 'transform 1.4s cubic-bezier(0.22,1,0.36,1)';
+    curtREl.style.transition = 'transform 1.4s cubic-bezier(0.22,1,0.36,1)';
+    curtLEl.style.transform = 'translateX(0%)';
+    curtREl.style.transform = 'translateX(0%)';
+
+    setTimeout(function () {
+      curtLEl.style.transform = 'translateX(-62%)';
+      curtREl.style.transform = 'translateX(62%)';
+    }, 100);
+
+    var fadeEls = document.querySelectorAll('.fade-ui');
+    setTimeout(function () {
+      for (var i = 0; i < fadeEls.length; i++) fadeEls[i].classList.add('in');
+    }, 600);
+
+    setTimeout(function () {
+      curtLEl.style.transition = 'none';
+      curtREl.style.transition = 'none';
+      for (var i = 0; i < fadeEls.length; i++) fadeEls[i].style.transition = 'none';
+    }, 2200);
+  </script>
+
+
+</body></html>

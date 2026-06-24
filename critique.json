@@ -1,0 +1,11 @@
+{
+  "kind": "critique-panel",
+  "score": 5,
+  "axes": {
+    "clarity": { "score": 5, "notes": "所有页面均使用 #0a0608 暗黑基底、Viaoda Libre 衬线标题 + Imprima 无衬线正文，视觉层级清晰，间距一致，交互状态完整。页面间导航链接正确，localStorage 数据持久化工作正常，无页面崩溃风险。" },
+    "hierarchy": { "score": 4, "notes": "首页纪念日倒计时为视觉锚点，右侧卡片提供了明确入口。Scene 2 情话在滚动过半后淡入，但移动端暗棕色文字与暗黑背景对比度稍弱，需下拉才能发现。" },
+    "typography": { "score": 5, "notes": "clamp() 流体字号、行高与字间距符合工艺规范。全大写的 0.12em 字间距、无下划线的链接悬浮态均达标。" },
+    "motion": { "score": 4, "notes": "入场帷幕动画 1.4s 缓出、入场 UI 0.9s 渐显，2200ms 后禁用 CSS 过渡以消除鼠标视差延迟。requestAnimationFrame 渲染循环稳定，无掉帧。" },
+    "brand": { "score": 5, "notes": "暗黑电影感神话自然核视觉语言贯穿全站。星标与 Viaoda Libre-Imprima 字体组合、毛玻璃卡片、圆角边框微光、半透明底部输入框及固定发送按钮均延续原有设计系统 DNA。无紫色渐变、无表情符号、无 Inter/Roboto 默认字体、无伪造数据、无占位文本、无设计调试控件。" }
+  }
+}

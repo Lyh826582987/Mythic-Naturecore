@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>我们的时光 — 照片墙</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Viaoda+Libre&family=Imprima&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; background: #0a0608; scroll-behavior: auto; }
+    html { scrollbar-gutter: stable; }
+    body { font-family: 'Imprima', sans-serif; color: #fff; }
+    * { box-sizing: border-box; }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 48px;
+      background: linear-gradient(to bottom, rgba(10,6,8,0.95) 40%, rgba(10,6,8,0) 100%);
+    }
+    .nav-group { display: flex; align-items: center; gap: 30px; }
+    .nav-link {
+      text-transform: uppercase; font-size: 12px; letter-spacing: 0.12em;
+      color: #fff; opacity: 0.8; text-decoration: none;
+      transition: opacity 0.3s;
+    }
+    .nav-link:hover, .nav-link.active { opacity: 1; }
+    .nav-logo { width: 28px; height: 28px; display: grid; place-items: center; text-decoration: none; }
+    .nav-mobile { display: none; }
+
+    /* ── Hero ── */
+    .page-hero {
+      padding: 130px 60px 30px; max-width: 800px; margin: 0 auto; text-align: center; position: relative;
+    }
+    .hero-eyebrow {
+      text-transform: uppercase; font-size: 11px; letter-spacing: 0.22em;
+      color: rgba(255,255,255,0.4); margin-bottom: 16px;
+    }
+    .hero-heading {
+      font-family: 'Viaoda Libre', serif; font-size: clamp(38px, 5vw, 64px);
+      line-height: 1.1; letter-spacing: 0.02em; margin: 0 0 12px; color: #fff;
+    }
+    .hero-lead {
+      font-size: 15px; line-height: 1.6; color: rgba(255,255,255,0.58); margin-bottom: 28px;
+    }
+
+    /* Upload button */
+    .upload-area {
+      display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 30px;
+    }
+    .upload-file-row {
+      display: flex; gap: 10px; align-items: center; max-width: 480px; width: 100%; flex-wrap: wrap; justify-content: center;
+    }
+    .upload-preview-wrap {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .upload-preview {
+      width: 44px; height: 44px; border-radius: 12px; background-size: cover; background-position: center;
+      border: 1px solid rgba(255,255,255,0.2); display: none; flex: none;
+    }
+    .upload-preview.has-file { display: block; }
+    .file-name {
+      font-size: 11px; color: rgba(255,255,255,0.5); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: none;
+    }
+    .file-name.has-file { display: block; }
+    .upload-input {
+      padding: 10px 16px; border-radius: 100px;
+      border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); color: #fff;
+      font-size: 13px; font-family: 'Imprima', sans-serif; outline: none;
+    }
+    input[type="date"].upload-input {
+      color-scheme: dark;
+      min-width: 150px; cursor: pointer;
+      padding-right: 12px;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1); opacity: 0.8; cursor: pointer;
+      width: 20px; height: 20px;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+    .upload-input::placeholder { color: rgba(255,255,255,0.3); }
+    .btn-sm {
+      padding: 10px 20px; border-radius: 100px; border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.08); color: #fff; cursor: pointer;
+      font-size: 12px; font-family: 'Imprima', sans-serif; white-space: nowrap;
+      transition: all 0.3s;
+    }
+    .btn-sm:hover { background: rgba(255,255,255,0.16); }
+    #photo-file { display: none; }
+
+    /* ── Photo grid ── */
+    .photos-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+      padding: 20px 60px 60px;
+      max-width: 1200px; margin: 0 auto;
+    }
+    .photo-card {
+      position: relative; border-radius: 18px; overflow: hidden;
+      aspect-ratio: 1/1; cursor: pointer;
+      background-size: cover; background-position: center;
+      transition: transform 0.5s cubic-bezier(0.22,1,0.36,1), box-shadow 0.5s;
+    }
+    .photo-card:hover { transform: translateY(-6px); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+    .photo-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(10,6,8,0.88) 0%, rgba(10,6,8,0.1) 50%, transparent 70%);
+      z-index: 1;
+    }
+    .photo-info {
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+      padding: 24px 22px;
+    }
+    .photo-date {
+      font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: rgba(255,255,255,0.5); margin-bottom: 6px;
+    }
+    .photo-desc {
+      font-family: 'Viaoda Libre', serif; font-size: 22px; line-height: 1.2;
+      color: #fff; margin: 0;
+    }
+    .photo-delete {
+      position: absolute; top: 12px; right: 12px; z-index: 5;
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(0,0,0,0.55); border: none; color: rgba(255,255,255,0.7);
+      cursor: pointer; font-size: 14px; display: grid; place-items: center;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .photo-card:hover .photo-delete { opacity: 1; }
+    .photo-delete:hover { background: rgba(220,50,50,0.7); color: #fff; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center; padding: 60px 20px; grid-column: 1 / -1;
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+    .empty-text { color: rgba(255,255,255,0.4); font-size: 15px; }
+
+    /* ── Lightbox ── */
+    .lightbox {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(10,6,8,0.96); backdrop-filter: blur(12px);
+    }
+    .lightbox.show { display: flex; align-items: center; justify-content: center; flex-direction: column; }
+    .lightbox img {
+      max-width: 85vw; max-height: 70vh; border-radius: 14px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6); object-fit: contain;
+    }
+    .lightbox-info {
+      margin-top: 20px; text-align: center; max-width: 500px;
+    }
+    .lightbox-date {
+      font-size: 11px; letter-spacing: 0.14em; color: rgba(255,255,255,0.45); margin-bottom: 6px;
+    }
+    .lightbox-desc {
+      font-family: 'Viaoda Libre', serif; font-size: 26px; color: #fff;
+    }
+    .lightbox-close {
+      position: absolute; top: 28px; right: 36px; width: 44px; height: 44px;
+      border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(0,0,0,0.4); color: #fff; cursor: pointer; font-size: 20px;
+      display: grid; place-items: center; transition: all 0.3s;
+    }
+    .lightbox-close:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.5); }
+
+    /* ── Footer ── */
+    .page-footer {
+      text-align: center; padding: 30px 20px 50px;
+      border-top: 1px solid rgba(255,255,255,0.06); margin: 0 60px;
+    }
+    .footer-back {
+      display: inline-flex; align-items: center; gap: 10px;
+      color: rgba(255,255,255,0.5); text-decoration: none;
+      font-size: 13px; letter-spacing: 0.1em; transition: color 0.3s;
+    }
+    .footer-back:hover { color: #fff; }
+    .footer-back svg { width: 16px; height: 16px; }
+
+    /* Focus visibility — WCAG 2.4.7 */
+    a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 2px solid rgba(255,255,255,0.6); outline-offset: 3px; border-radius: 4px;
+    }
+    .photo-card:focus-visible { outline-offset: -4px; border-radius: 18px; }
+    .photo-delete:focus-visible { outline-offset: 1px; opacity: 1; }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media (max-width: 1023px) {
+      .photos-grid { grid-template-columns: repeat(2, 1fr); padding: 20px 32px 50px; }
+    }
+    @media (max-width: 767px) {
+      nav { padding: 18px 20px; }
+      .nav-group { display: none; }
+      .nav-mobile { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+      .page-hero { padding: 100px 20px 20px; }
+      .photos-grid { grid-template-columns: 1fr; gap: 14px; padding: 10px 20px 40px; }
+      .photo-card { aspect-ratio: 3/2; }
+      .upload-file-row { flex-direction: column; }
+      .file-name { max-width: 200px; }
+      .page-footer { margin: 0 20px; }
+      .lightbox img { max-width: 92vw; max-height: 60vh; }
+    }
+
+    @media (max-width: 767px) {
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-group">
+      <a class="nav-link" href="index.html">首页</a>
+      <a class="nav-link active" href="worlds.html">照片墙</a>
+      <a class="nav-link" href="atelier.html">日常</a>
+      <a class="nav-link" href="codex.html">留言</a>
+      <a href="index.html" class="nav-logo" aria-label="返回首页" style="margin-left:20px;">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2l2.09 6.42H23l-5.45 3.96L19.64 19 14 15.04 8.36 19l2.09-6.62L5 8.42h6.91L14 2z" fill="#fff"/>
+        </svg>
+      </a>
+    </div>
+    <div class="nav-mobile">
+      <a class="nav-link" href="index.html">首页</a>
+      <a href="index.html" class="nav-logo">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 2l2.09 6.42H23l-5.45 3.96L19.64 19 14 15.04 8.36 19l2.09-6.62L5 8.42h6.91L14 2z" fill="#fff"/>
+        </svg>
+      </a>
+      <a class="nav-link" href="codex.html">留言</a>
+    </div>
+  </nav>
+
+  <section class="page-hero">
+    <p class="hero-eyebrow">Photos · 🖼️</p>
+    <h1 class="hero-heading">我们的时光</h1>
+    <p class="hero-lead">每一帧画面都是我们共同创造的记忆，记录下那些让心跳加速的瞬间。</p>
+    <div class="upload-area">
+      <div class="upload-file-row">
+        <input type="file" id="photo-file" accept="image/*" onchange="handleFileSelect(event)" />
+        <label for="photo-file" class="btn-sm" style="cursor:pointer;">📁 选择照片</label>
+        <span class="file-name" id="file-name"></span>
+        <div class="upload-preview" id="upload-preview"></div>
+        <input class="upload-input" id="photo-date" type="date" style="max-width:140px;" aria-label="照片日期" />
+        <input class="upload-input" id="photo-desc" type="text" placeholder="简短描述" style="max-width:160px;" aria-label="照片描述" />
+        <button class="btn-sm" onclick="addPhoto()">📷 上传</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="photos-grid" id="photos-grid">
+    <!-- JS filled -->
+  </section>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+    <button class="lightbox-close" onclick="closeLightbox()" aria-label="关闭">✕</button>
+    <img id="lightbox-img" src="" alt="照片详情" />
+    <div class="lightbox-info">
+      <p class="lightbox-date" id="lightbox-date"></p>
+      <p class="lightbox-desc" id="lightbox-desc"></p>
+    </div>
+  </div>
+
+  <footer class="page-footer">
+    <a href="index.html" class="footer-back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      返回首页
+    </a>
+  </footer>
+
+  <script>
+    // ── API helpers ──
+    async function apiGet(url) { var r = await fetch(url); var j = await r.json(); return j.data; }
+    async function apiPost(url, body) { var r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); return r.json(); }
+    async function apiDelete(url) { var r = await fetch(url, { method: 'DELETE' }); return r.json(); }
+
+    var photos = [];
+    var pendingFile = null; // File object waiting to be uploaded
+
+    async function loadPhotos() {
+      try { photos = await apiGet('/api/photos') || []; } catch(e) { photos = []; }
+      renderPhotos();
+    }
+
+    function renderPhotos() {
+      var grid = document.getElementById('photos-grid');
+      if (photos.length === 0) {
+        grid.innerHTML = '<div class="empty-state"><div class="empty-icon">📸</div><p class="empty-text">还没有照片，点击上方"选择照片"添加第一张吧 💕</p></div>';
+        return;
+      }
+      var html = '';
+      // Show newest first
+      for (var i = photos.length - 1; i >= 0; i--) {
+        var p = photos[i];
+        html += '<div class="photo-card" style="background-image:url(\'' + p.url + '\')" onclick="openLightbox(' + i + ')" tabindex="0" role="button" aria-label="查看照片：' + p.desc + '" onkeydown="if(event.key===\'Enter\')openLightbox(' + i + ')">';
+        html += '<button class="photo-delete" onclick="event.stopPropagation();deletePhoto(' + i + ')" aria-label="删除照片">🗑</button>';
+        html += '<div class="photo-info"><p class="photo-date">' + p.date + '</p><p class="photo-desc">' + p.desc + '</p></div>';
+        html += '</div>';
+      }
+      grid.innerHTML = html;
+    }
+
+    // ── File select handler ──
+    function handleFileSelect(event) {
+      var file = event.target.files[0];
+      if (!file) return;
+      if (!file.type.match(/^image\/(jpeg|png|gif|webp|bmp)$/)) {
+        alert('请选择 JPEG、PNG、GIF、WebP 或 BMP 格式的图片');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert('图片不能超过 5MB，请压缩后重试');
+        return;
+      }
+      pendingFile = file;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var preview = document.getElementById('upload-preview');
+        preview.style.backgroundImage = 'url(' + e.target.result + ')';
+        preview.classList.add('has-file');
+      };
+      reader.readAsDataURL(file);
+      var nameEl = document.getElementById('file-name');
+      nameEl.textContent = file.name;
+      nameEl.classList.add('has-file');
+    }
+
+    async function addPhoto() {
+      if (!pendingFile) {
+        alert('请先选择一张照片文件');
+        return;
+      }
+      var desc = document.getElementById('photo-desc').value.trim();
+      if (!desc) { desc = '美好的瞬间'; }
+      var dateEl = document.getElementById('photo-date');
+      var dateVal = dateEl.value || new Date().toISOString().slice(0, 10);
+
+      var formData = new FormData();
+      formData.append('photo', pendingFile);
+      formData.append('date', dateVal);
+      formData.append('desc', desc);
+
+      var r = await fetch('/api/photos', { method: 'POST', body: formData });
+      var j = await r.json();
+      if (j.ok) {
+        pendingFile = null;
+        document.getElementById('photo-file').value = '';
+        document.getElementById('upload-preview').classList.remove('has-file');
+        document.getElementById('upload-preview').style.backgroundImage = '';
+        document.getElementById('file-name').classList.remove('has-file');
+        document.getElementById('file-name').textContent = '';
+        document.getElementById('photo-desc').value = '';
+        dateEl.value = '';
+        loadPhotos();
+      } else {
+        alert(j.error || '上传失败');
+      }
+    }
+
+    async function deletePhoto(index) {
+      if (!confirm('确定删除这张照片吗？')) return;
+      await apiDelete('/api/photos/' + index);
+      loadPhotos();
+      // Also close lightbox if open
+      document.getElementById('lightbox').classList.remove('show');
+    }
+
+    // ── Lightbox ──
+    function openLightbox(index) {
+      var p = photos[index];
+      document.getElementById('lightbox-img').src = p.url;
+      document.getElementById('lightbox-img').alt = p.desc;
+      document.getElementById('lightbox-date').textContent = p.date;
+      document.getElementById('lightbox-desc').textContent = p.desc;
+      document.getElementById('lightbox').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeLightbox(e) {
+      if (e && e.target !== document.getElementById('lightbox')) return;
+      document.getElementById('lightbox').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeLightbox(); });
+
+    loadPhotos();
+  </script>
+</body>
+</html>
