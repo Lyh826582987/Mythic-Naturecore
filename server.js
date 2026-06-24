@@ -13,7 +13,18 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 const DATA_DIR = path.join(__dirname, 'data');
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
+const MUSIC_DIR = path.join(__dirname, 'public', 'music');
+
+// 确保所有运行时目录存在
+[DATA_DIR, UPLOADS_DIR, MUSIC_DIR].forEach(dir => {
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+});
+
+// Health check — Railway 需要这个来判断服务是否存活
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', uptime: process.uptime() });
+});
 
 // API routes before static — prevents a public/ file from shadowing /api
 app.use('/api/settings', require('./routes/settings'));
