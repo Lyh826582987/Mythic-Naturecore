@@ -255,7 +255,7 @@
     function renderMessages() {
       var list = document.getElementById('msg-list');
       if (messages.length === 0) {
-        list.innerHTML = '<div class="empty-state"><div class="empty-icon">💌</div><p class="empty-text">唐颖狗东西</p></div>';
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">唐颖狗东西</div><p class="empty-text">唐颖狗东西</p></div>';
         return;
       }
       var sorted = messages.slice().sort(function(a, b) { return b.time.localeCompare(a.time); });
